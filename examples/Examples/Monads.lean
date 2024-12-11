@@ -1,14 +1,21 @@
-import Examples.Support
 import Examples.Classes
+import Examples.Support
 
 namespace Monads.Option
 
+
+section
+variable {α : Type}
+variable (xs : List α)
+#check xs[0]?
+#eval [1,2,3][0]?
+#eval ([]: List Nat)[0]?
+end
 
 book declaration {{{ first }}}
   def first (xs : List α) : Option α :=
     xs[0]?
 stop book declaration
-
 
 book declaration {{{ firstThird }}}
   def firstThird (xs : List α) : Option (α × α) :=
@@ -21,6 +28,14 @@ book declaration {{{ firstThird }}}
         some (first, third)
 stop book declaration
 
+def firstThirdList (xs : List α) : List α :=
+  match firstThird xs with
+  | none => []
+  | some pair => [pair.fst, pair.snd]
+
+#eval firstThird [1,2,3]
+#eval firstThird [1,2]
+#eval firstThird ([] : List Nat)
 
 book declaration {{{ firstThirdFifth }}}
   def firstThirdFifth (xs : List α) : Option (α × α × α) :=
@@ -65,8 +80,7 @@ stop book declaration
 
 book declaration {{{ firstThirdandThen }}}
   def firstThird (xs : List α) : Option (α × α) :=
-    andThen xs[0]? fun first =>
-    andThen xs[2]? fun third =>
+    andThen xs[0]? fun first => andThen xs[2]? fun third =>
     some (first, third)
 stop book declaration
 
@@ -121,6 +135,14 @@ book declaration {{{ firstThirdInfix }}}
     some (first, third)
 stop book declaration
 
+def get' (xs : List α) (i : Nat) : Option α := xs[i]?
+
+def firstThirdInfix' (xs : List α) : Option (α × α) :=
+  get' xs 0 ~~> fun first =>
+  get' xs 2 ~~> fun third =>
+  some (first, third)
+
+
 
 book declaration {{{ firstThirdFifthSeventInfix }}}
   def firstThirdFifthSeventh (xs : List α) : Option (α × α × α × α) :=
@@ -131,6 +153,13 @@ book declaration {{{ firstThirdFifthSeventInfix }}}
     some (first, third, fifth, seventh)
 stop book declaration
 end M
+
+def firstThirdFifthList (xs : List α) : List α :=
+  match firstThirdFifth xs with
+  | none => []
+  | some (first, third, fifth) => [first, third, fifth]
+
+
 
 end Monads.Option
 
@@ -166,17 +195,22 @@ message
   "Except.ok \"sea buckthorn\""
 end expect
 
+#eval get ediblePlants 2
+
 expect info {{{ failure }}}
   #eval get ediblePlants 4
 message
   "Except.error \"Index 4 not found (maximum is 3)\""
 end expect
 
+#eval get ediblePlants 4
 
 book declaration {{{ firstExcept }}}
   def first (xs : List α) : Except String α :=
     get xs 0
 stop book declaration
+
+#check first
 
 
 book declaration {{{ firstThirdExcept }}}
@@ -240,7 +274,11 @@ book declaration {{{ firstThirdAndThenExcept }}}
 stop book declaration
 end AndThen
 
+section
+variable {α : Type} (xs : List α)
+#check andThen (get xs 0)
 
+end
 
 book declaration {{{ andThenExceptInfix }}}
   infixl:55 " ~~> " => andThen
@@ -511,6 +549,3 @@ end Monadicish
 example : number aTree = Monadicish.number aTree := by rfl
 
 end Monads.State
-
-
-
